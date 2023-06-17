@@ -17,33 +17,34 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const updateImages = (searchRequest, galleryPage) => {
+    const updateImages = async (searchRequest, galleryPage) => {
       setIsLoading(true);
 
-      setTimeout(() => {
-        try {
-          fetchImages(searchRequest, galleryPage).then(data => {
-            if (!data.data.hits.length) {
-              return toast.error(
-                'There is no images found with that search request'
-              );
-            }
-            const mappedImages = data.data.hits.map(
-              ({ id, webformatURL, description, largeImageURL }) => ({
-                id,
-                webformatURL,
-                description,
-                largeImageURL,
-              })
-            );
-            setImages(i => [...i, ...mappedImages]);
-          });
-        } catch (error) {
-          setError(error);
-        } finally {
-          setIsLoading(false);
+      try {
+        const data = await fetchImages(searchRequest, galleryPage);
+        if (!data.data.hits.length) {
+          return toast.error(
+            'There are no images found with that search request'
+          );
         }
-      }, 1000);
+
+        const mappedImages = data.data.hits.map(
+          ({ id, webformatURL, description, largeImageURL }) => ({
+            id,
+            webformatURL,
+            description,
+            largeImageURL,
+          })
+        );
+
+        setTimeout(() => {
+          setImages(prevImages => [...prevImages, ...mappedImages]);
+          setIsLoading(false);
+        }, 1100); // Opóźnienie 1500ms przed ustawieniem obrazków i zakończeniem ładowania
+      } catch (error) {
+        setError(error);
+        setIsLoading(false);
+      }
     };
 
     if (searchRequest !== '' || galleryPage !== 1) {
